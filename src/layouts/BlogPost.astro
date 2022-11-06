@@ -1,0 +1,57 @@
+---
+import fs from 'node:fs';
+
+import type { MarkdownLayoutProps } from 'astro';
+import { Picture } from '@astrojs/image/components';
+
+import type { BlogPostFrontmatter } from "@types";
+import { formatDate } from '@utils';
+import Base from "./Base.astro";
+
+type Props = MarkdownLayoutProps<BlogPostFrontmatter>;
+
+const { title, date, draft, tags } = Astro.props.frontmatter;
+const { url } = Astro.props;
+
+const slug = url?.split('/')[2];
+
+const imageFormats = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'tiff', 'tif', 'gif', 'svg'];
+
+const imagePath = (filename: string): URL => {
+    if (import.meta.env.PROD) {
+        return new URL(`./images/${filename}`, import.meta.url);
+    }
+
+    return new URL(`../../public/images/${filename}`, import.meta.url);
+}
+
+const foundImageFormat = imageFormats.find((format: string): boolean => {
+    try {
+        fs.accessSync(imagePath(`${slug}.${format}`))
+        return true;
+    } catch {
+        return false;
+    }
+});
+---
+<Base title="blog post">
+    <div class="mb-8">
+        {draft &&
+        <p class="bg-red-700 text-white inline-block px-2 mb-4">DRAFT</p>}
+
+        {tags &&
+        <div class="mb-2">
+            {tags.map(tag => (<a class="mr-2 uppercase text-blue-500" href={`/posts/tag/${tag.toLocaleLowerCase()}`}>#<span class="font-bold">{tag}</span></a>))}
+        </div>}
+
+        <h1 class="text-3xl mb-2">{title}</h1>
+        <p>{formatDate(date)}</p>
+    </div>
+
+    {foundImageFormat !== undefined &&
+    <Picture class="mb-8" src={`/images/${slug}.${foundImageFormat}`} widths={[400, 600, 1024]} sizes="(max-width: 400px) 400px, (max-width: 600px) 600px, 1024px" aspectRatio="5:3" alt="image" />}
+
+    <div class="prose">
+        <slot />
+    </div>
+</Base>

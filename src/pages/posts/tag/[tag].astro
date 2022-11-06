@@ -1,0 +1,47 @@
+---
+import type { BlogPostFrontmatter } from "@types";
+
+export async function getStaticPaths() {
+    const posts = await Astro.glob<BlogPostFrontmatter>('../*.md');
+
+    let tags: string[] = [];
+
+    posts.forEach(post => {
+        if (post.frontmatter.tags) {
+            tags.push(...post.frontmatter.tags)
+        }
+    });
+
+    return tags.map(tag => ({
+        params: {
+            tag: tag.toLocaleLowerCase()
+        }
+    }))
+}
+
+import Base from "@layouts/Base.astro";
+import PostsList from "@components/PostsList.astro";
+import { capitaliseSentence } from "@utils";
+
+const { tag } = Astro.params;
+
+let posts = await Astro.glob<BlogPostFrontmatter>('../*.md');
+
+posts = posts.filter(post => {
+    let shouldShow = false;
+
+    post.frontmatter.tags?.forEach(postTag => {
+        if (postTag.toLocaleLowerCase() === tag) {
+            shouldShow = true;
+        }
+    })
+
+    return shouldShow;
+})
+---
+<Base title={`${capitaliseSentence(tag as string)} Blog Posts`}>
+    <h1 class="mb-8 text-6xl">Blog Posts</h1>
+    <p>Showing blog posts for the <strong>{capitaliseSentence(tag as string)}</strong> tag</p>
+
+    <PostsList posts={posts} />
+</Base>
