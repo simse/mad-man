@@ -1,0 +1,45 @@
+---
+export async function getStaticPaths() {
+    const posts = await getPosts();
+
+    let pages: [{ params: { page?: number } }] = [
+        { params: { page: undefined } },
+    ];
+
+    for (let i = 0; i < posts.meta.pagination.pages; i++) {
+        pages.push({
+            params: {
+                page: i + 1,
+            },
+        });
+    }
+
+    return pages;
+}
+
+const { page } = Astro.params;
+let pageNumber = 1;
+if (page) {
+    pageNumber = page as number;
+}
+
+import Base from "@layouts/Base.astro";
+import PostsLists from "@components/PostsList.astro";
+import { getPosts } from "@lib/ghost";
+
+const posts = await getPosts(20, 1);
+---
+
+<Base title="Blog Posts">
+    <h1 class="mb-8 text-6xl">Blog Posts</h1>
+
+    <div>
+        <PostsLists posts={posts} />
+    </div>
+
+    <nav class="mt-8">
+        <ul>
+            <li></li>
+        </ul>
+    </nav>
+</Base>

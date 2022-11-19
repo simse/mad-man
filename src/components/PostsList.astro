@@ -1,39 +1,18 @@
 ---
-import type { MarkdownInstance } from 'astro';
-import type { BlogPostFrontmatter } from "@types";
+import type { PostsOrPages } from '@tryghost/content-api';
 import { formatDate } from '@utils';
 
-type Post = MarkdownInstance<BlogPostFrontmatter>;
-
 interface Props {
-    posts: Post[];
+    posts: PostsOrPages;
 }
 
 let { posts } = Astro.props;
-
-posts = posts.sort((a: Post, b: Post): number => {
-    if (a.frontmatter.date > b.frontmatter.date) {
-        return -1;
-    }
-
-    if (b.frontmatter.date > a.frontmatter.date) {
-        return 1;
-    }
-
-    return 0;
-});
-
-if (import.meta.env.PROD) {
-    posts = posts.filter(post => !post.frontmatter.draft)
-}
 ---
 
 {posts.map(post => (
     <div class="py-4 border-b first:border-t">
-        {post.frontmatter.draft &&
-        <p class="bg-red-700 text-white inline-block px-2">DRAFT</p>}
-
-        <a class="text-blue-700 hover:underline" href={post.url}>{post.frontmatter.title}</a>
-        <p>{formatDate(post.frontmatter.date)}</p>
+        <a class="text-blue-700 hover:underline" href={`/posts/${post.slug}`}>{post.title}</a>
+        <p>{post.published_at && 
+            formatDate(post.published_at)}</p>
     </div>
 ))}
